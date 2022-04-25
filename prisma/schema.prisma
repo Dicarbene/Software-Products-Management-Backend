@@ -48,19 +48,21 @@ model product_info {
   watch_of_product   watch_of_product[]
 
   @@index([product_name], map: "full_idx_name")
+  @@index([product_name], map: "idx_name")
 }
 
 model star_of_product {
   id           BigInt       @default(autoincrement()) @map("_id")
   u_id         BigInt
   p_id         BigInt
-  stared_time  DateTime     @db.Timestamp(0)
+  stared_time  DateTime?    @db.Timestamp(0)
   product_info product_info @relation(fields: [p_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_be_stared")
   user_info    user_info    @relation(fields: [u_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_star")
 
   @@id([id, u_id, p_id])
   @@index([p_id], map: "fk_idx_p_s")
   @@index([u_id], map: "fk_idx_u_s")
+  @@index([stared_time], map: "idx_s_time")
 }
 
 model user_info {
@@ -76,8 +78,7 @@ model user_info {
   watch_of_product   watch_of_product[]
 
   @@index([email], map: "idx_email")
-  @@index([email, password], map: "idx_email_and_pass")
-  @@index([user_log_id, password], map: "idx_id_and_pass")
+  @@index([password], map: "idx_passwd")
   @@index([user_log_id], map: "idx_u_id")
 }
 
@@ -92,10 +93,11 @@ model watch_of_product {
   @@id([id, u_id, p_id])
   @@index([p_id], map: "fk_p_w")
   @@index([u_id], map: "fk_u_w")
+  @@index([latest_watched_time], map: "idx_w_time")
 }
 
 model participation_info {
-  id           BigInt       @map("_id")
+  id           BigInt       @default(autoincrement()) @map("_id")
   u_id         BigInt
   p_id         BigInt
   product_info product_info @relation(fields: [p_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_be_particepated")
