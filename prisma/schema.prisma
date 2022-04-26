@@ -1,43 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model file_content {
-  id           BigInt         @id @default(autoincrement()) @map("_id")
-  file_info_id BigInt
+  id           Int            @id @default(autoincrement()) @map("_id")
+  file_info_id Int
   file_url     String         @db.VarChar(200)
   file_name    String         @db.VarChar(45)
-  file_info    file_info      @relation(fields: [file_info_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_show_content")
+  file_info    file_info      @relation(fields: [file_info_id], references: [id], onDelete: Cascade, map: "fk_to_show_content")
   file_edition file_edition[]
 
   @@index([file_info_id], map: "fk_idx_f_id")
 }
 
 model file_edition {
-  id           BigInt       @id @default(autoincrement()) @map("_id")
-  file_info_id BigInt
-  file_id      BigInt
-  next_id      BigInt?      @default(0)
-  file_content file_content @relation(fields: [file_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_control_edition")
+  id           Int          @id @default(autoincrement()) @map("_id")
+  file_info_id Int
+  file_id      Int
+  next_id      Int?         @default(0)
+  file_content file_content @relation(fields: [file_id], references: [id], onDelete: Cascade, map: "fk_to_control_edition")
 
   @@index([file_id], map: "fk_idx_content_id")
   @@index([file_info_id], map: "idx_file_info_id")
 }
 
 model file_info {
-  id                 BigInt         @id @default(autoincrement()) @map("_id")
-  product_id         BigInt
+  id                 Int            @id @default(autoincrement()) @map("_id")
+  product_id         Int
   file_name          String         @db.VarChar(45)
   latest_change_time DateTime       @db.Timestamp(0)
-  product_info       product_info   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_show_file")
+  product_info       product_info   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_file_info_product_info1")
   file_content       file_content[]
 
-  @@index([product_id], map: "fk_idx_p_id")
+  @@index([product_id], map: "fk_file_info_product_info1_idx")
 }
 
 model product_info {
-  id                 BigInt               @id @default(autoincrement()) @map("_id")
+  id                 Int                  @id @default(autoincrement()) @map("_id")
   product_name       String               @db.VarChar(45)
   creator_id         String               @db.VarChar(20)
   creator_email      String               @db.VarChar(45)
@@ -48,23 +52,25 @@ model product_info {
   watch_of_product   watch_of_product[]
 
   @@index([product_name], map: "full_idx_name")
+  @@index([product_name], map: "idx_name")
 }
 
 model star_of_product {
-  id           BigInt       @default(autoincrement()) @map("_id")
-  u_id         BigInt
-  p_id         BigInt
-  stared_time  DateTime     @db.Timestamp(0)
-  product_info product_info @relation(fields: [p_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_be_stared")
-  user_info    user_info    @relation(fields: [u_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_star")
+  id           Int          @default(autoincrement()) @map("_id")
+  u_id         Int
+  p_id         Int
+  stared_time  DateTime?    @db.Timestamp(0)
+  product_info product_info @relation(fields: [p_id], references: [id], onDelete: Cascade, map: "fk_to_be_stared")
+  user_info    user_info    @relation(fields: [u_id], references: [id], onDelete: Cascade, map: "fk_to_star")
 
   @@id([id, u_id, p_id])
   @@index([p_id], map: "fk_idx_p_s")
   @@index([u_id], map: "fk_idx_u_s")
+  @@index([stared_time], map: "idx_s_time")
 }
 
 model user_info {
-  id                 BigInt               @id @default(autoincrement()) @map("_id")
+  id                 Int                  @id @default(autoincrement()) @map("_id")
   user_log_id        String               @unique(map: "user_id_UNIQUE") @db.VarChar(20)
   password           String               @db.VarChar(45)
   email              String               @db.VarChar(45)
@@ -76,30 +82,30 @@ model user_info {
   watch_of_product   watch_of_product[]
 
   @@index([email], map: "idx_email")
-  @@index([email, password], map: "idx_email_and_pass")
-  @@index([user_log_id, password], map: "idx_id_and_pass")
+  @@index([password], map: "idx_passwd")
   @@index([user_log_id], map: "idx_u_id")
 }
 
 model watch_of_product {
-  id                  BigInt       @default(autoincrement()) @map("_id")
-  u_id                BigInt
-  p_id                BigInt
+  id                  Int          @default(autoincrement()) @map("_id")
+  u_id                Int
+  p_id                Int
   latest_watched_time DateTime     @db.Timestamp(0)
-  product_info        product_info @relation(fields: [p_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_be_watched")
-  user_info           user_info    @relation(fields: [u_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_watch")
+  product_info        product_info @relation(fields: [p_id], references: [id], onDelete: Cascade, map: "fk_to_be_watched")
+  user_info           user_info    @relation(fields: [u_id], references: [id], onDelete: Cascade, map: "fk_to_watch")
 
   @@id([id, u_id, p_id])
   @@index([p_id], map: "fk_p_w")
   @@index([u_id], map: "fk_u_w")
+  @@index([latest_watched_time], map: "idx_w_time")
 }
 
 model participation_info {
-  id           BigInt       @map("_id")
-  u_id         BigInt
-  p_id         BigInt
-  product_info product_info @relation(fields: [p_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_be_particepated")
-  user_info    user_info    @relation(fields: [u_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_particepate")
+  id           Int          @default(autoincrement()) @map("_id")
+  u_id         Int
+  p_id         Int
+  product_info product_info @relation(fields: [p_id], references: [id], onDelete: Cascade, map: "fk_to_be_particepated")
+  user_info    user_info    @relation(fields: [u_id], references: [id], onDelete: Cascade, map: "fk_to_particepate")
 
   @@id([id, u_id, p_id])
   @@index([p_id], map: "fk_idx_p_pa")
