@@ -58,34 +58,33 @@ You can access the REST API of the server using the following endpoints:
 
 ### `GET`
 
-- `/post/:id`: Fetch a single post by its `id`
-- `/feed?searchString={searchString}&take={take}&skip={skip}&orderBy={orderBy}`: Fetch all _published_ posts
-  - Query Parameters
-    - `searchString` (optional): This filters posts by `title` or `content`
-    - `take` (optional): This specifies how many objects should be returned in the list
-    - `skip` (optional): This specifies how many of the returned objects in the list should be skipped
-    - `orderBy` (optional): The sort order for posts in either ascending or descending order. The value can either `asc` or `desc`
-- `/user/:id/drafts`: Fetch user's drafts by their `id`
-- `/users`: Fetch all users
+- `/user/:user_id`: 用户内置主键为`id`的用户信息
+
+- `/user/:u_id/product/:p_id`:用户内置主键为`u_id`的用户创建的内置主键为`p_id`的产品的主要信息
+
+- `/user/:u_id/product/:p_id/file/:f_id`: 用户内置主键为`u_id`的用户创建的内置主键为`p_id`的产品的内置主键为`f_id`的文件的主要信息
+
+- `/users`: 所有用户的信息
 ### `POST`
 
-- `/post`: Create a new post
+- `/login`: 创建新用户
   - Body:
-    - `title: String` (required): The title of the post
-    - `content: String` (optional): The content of the post
-    - `authorEmail: String` (required): The email of the user that creates the post
-- `/signup`: Create a new user
+    - `id: String` (required): 用户的登录id
+    - `email: String` (optional): 用户的邮箱
+    - `password: String` (required): 用户的密码
+- `/logon`: 用户登录
   - Body:
-    - `email: String` (required): The email address of the user
-    - `name: String` (optional): The name of the user
-    - `postData: PostCreateInput[]` (optional): The posts of the user
+    - `id_or_email: String` (required): 用户的登录id或邮箱，两者任选其一输入
+    - `password: String` (required): 用户的密码
 
-### `PUT`
+### `PUT` 
+- `Beware: No used out req. in this project`
 
 - `/publish/:id`: Toggle the publish value of a post by its `id`
 - `/post/:id/views`: Increases the `viewCount` of a `Post` by one `id`
 
 ### `DELETE`
+- `Beware: No used out req. in this project`
 
 - `/post/:id`: Delete a post by its `id`
 

@@ -56,25 +56,13 @@ app.use(express.json())
 
     res.json(info)
     }catch(error){
-      res.send('something wrong')
+      res.status(404).send('something wrong')
     }
   })
 
   app.get(`/user/:u_id/product/:p_id`, async (req, res) => {
     const { u_id ,p_id }=req.params
-//abandoned method
-    //const { p_name, u_id } = req.body//u_id为浏览者id_to_log，并非创建者
-    /*try {
-      const p = await prisma.product_info.findUnique({
-        where: { id: p_id, },
-      })
-      //const result = await prisma.$queryRaw`call pr_to_watch(${p_name},${u_id},${_if})`
-
-      res.json(p)
-    } catch (error) {
-      res.json({ error: `wrong find param` })*/
-//abandoned method
-
+      try{
       var w_t,w_7,s_t,s_7
 
       const result_watch = await prisma.$queryRaw`call pr_watch_info(${p_id},${w_t},${w_7})`
@@ -92,6 +80,34 @@ app.use(express.json())
 
       const x=[p,u,result_watch,result_star,all_file]
       res.json(x)
+    }catch(error){
+      res.status(404).send('something wrong')
+    }
+  })
+
+  app.get(`/user/:u_id/product/:p_id/file/:f_id`, async (req, res) => {//文件信息
+    const { u_id, p_id, f_id } = req.params
+
+    try{
+      var w_t,w_7,s_t,s_7
+
+      const result_watch = await prisma.$queryRaw`call pr_watch_info(${p_id},${w_t},${w_7})`
+      const result_star = await prisma.$queryRaw`call pr_star_info(${p_id},${s_t},${s_7})`
+
+      const p = await prisma.product_info.findUnique({
+        where: { id: parseInt(p_id), },
+      })
+      const u = await prisma.user_info.findUnique({
+        where: { id: parseInt(u_id), },
+      })
+      
+      const all_edition = await prisma.$queryRaw`call pr_view_all_edition(${f_id})`
+
+      const x=[p,u,result_watch,result_star,all_edition]
+      res.json(x)
+    }catch(error){
+      res.status(404).send('something wrong')
+    }
   })
 
 
