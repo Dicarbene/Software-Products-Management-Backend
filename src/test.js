@@ -1,5 +1,6 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
+const { json } = require('express/lib/response')
 
 const prisma = new PrismaClient()
 const app = express()
@@ -102,6 +103,88 @@ app.use(express.json())
     //}
   })
 
+  app.post(`/user=:u_log_id/product=:p_name`, async (req, res) => {//关注、点赞
+    const { u_log_id ,p_name }=req.params
+    const { watcher_id ,move_type}=req.body
+      //try{
+
+        const u_info = await prisma.user_info.findUnique({
+          where: { user_log_id: u_log_id },
+        })
+    
+        if(u_info==null)res.status(404)
+
+        const p_info = await prisma.product_info.findUnique({
+          where: { 
+            NameAndId:{
+              product_name: p_name,
+              creator_id: u_log_id,
+            }
+          },
+        })
+    
+        if(p_info==null)res.status(404)
+
+      //move_type:
+      //1:watch
+      //2:unwatch
+      //3:star
+      //4:un_star
+       if(move_type==1){
+        await prisma.$queryRaw`call pr_to_watch(${watcher_id},${p_name})`
+        alert('关注成功')
+       }
+       else if(move_type==2){
+        await prisma.$queryRaw`call pr_to_unwatch(${watcher_id},${p_name})`
+        alert('取消关注')
+       }
+       else if(move_type==3){
+        await prisma.$queryRaw`call pr_to_star(${watcher_id},${p_name})`
+        alert('收藏成功')
+       }
+       else if(move_type==4){
+        await prisma.$queryRaw`call pr_to_unstar(${watcher_id},${p_name})`
+        alert('取消成功')
+       }
+       else res.status(404)
+
+    //}catch(error){
+      //res.status(404).send('something wrong')
+    //}
+  })
+
+  //仍未完成
+  app.post(`/user=:u_log_id/product=:p_name/newFile`, async (req, res) => {//新建文件
+    const { u_log_id ,p_name }=req.params
+    const { c_id, f_name } = req.body
+      //try{
+
+        const u_info = await prisma.user_info.findUnique({
+          where: { user_log_id: u_log_id },
+        })
+    
+        if(u_info==null)res.status(404)
+
+        const p_info = await prisma.product_info.findUnique({
+          where: { 
+            NameAndId:{
+              product_name: p_name,
+              creator_id: u_log_id,
+            }
+          },
+        })
+    
+        if(p_info==null)res.status(404)
+
+        
+
+      const x=[p_info,result_watch,result_star,all_file]//product_info已有冗余列，不需要返回u_info
+      res.json(x)
+    //}catch(error){
+      //res.status(404).send('something wrong')
+    //}
+  })
+
   app.get(`/user=:u_log_id/product=:p_name/code=:f_name`, async (req, res) => {//文件信息
     const { u_log_id, p_name, f_name } = req.params
 
@@ -151,8 +234,8 @@ app.use(express.json())
     //}
   })
 
-  app.get(`/searchProduct/q=:p_name&p=:page`, async (req, res) => {
-    const { p_name, page } = req.params
+  app.get(`/searchProduct/type=:type_of_search&q=:query&p=:page`, async (req, res) => {
+    const { query, type_of_search, page } = req.params
 
     var adjusted_page=parseInt(page)
 
@@ -164,13 +247,26 @@ app.use(express.json())
 
     width=2;//设置一页有多少条搜索结果
 
+    let all_result=new Array;
+    let n=new Number;
     let limited_result=new Array;
 
-    const all_result = await prisma.$queryRaw`call pr_search(${p_name})`
-    const n = await prisma.$queryRaw`call pr_how_many_results(${p_name},${n_})`
+    if(type_of_search=='product'){
+      all_result = await prisma.$queryRaw`call pr_search_p(${query})`
+      n=all_result.length
+      //n = await prisma.$queryRaw`call pr_how_many_results_p(${p_name},${n_})`
     //所有的存储过程调用语句都返回一个数组
+    }
+    else if(type_of_search=='user'){
+      all_result = await prisma.$queryRaw`call pr_search_u(${query})`
+      n=all_result.length
+      //n = await prisma.$queryRaw`call pr_how_many_results_u(${p_name},${n_})`
+    //所有的存储过程调用语句都返回一个数组
+    }
+    else res.status(404);
 
-    var max_page=Math.ceil(parseInt(n[0].f0)/width);//最大页数
+    var max_page=Math.ceil(n/width);//最大页数
+    //var max_page=Math.ceil(parseInt(n[0].f0)/width);//最大页数
 
     l=0;i=0;
 
@@ -179,7 +275,11 @@ app.use(express.json())
       l++;
     }
 
-    const x=[n,max_page,limited_result]//应当判断limited_result[0]是否为空，空则显示没有更多信息
+    var t = n + "";
+    var str = '{"total_num":'+t+'}';
+    var total = JSON.parse(str);  //数字转化JSON格式
+
+    const x=[total,limited_result]//应当判断limited_result[0]是否为空，空则显示没有更多信息
 
     res.json(x)
   })
