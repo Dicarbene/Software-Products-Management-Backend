@@ -87,6 +87,8 @@ app.use(express.json())
 
       const result_watch = await prisma.$queryRaw`call pr_watch_info(${p_info.id},${w_t},${w_7})`
       const result_star = await prisma.$queryRaw`call pr_star_info(${p_info.id},${s_t},${s_7})`
+      //所有的存储过程调用语句都返回一个数组
+      //此处的两个info数组只有一项[0]，其中两项f0,f1 分别是总数和过去七天
 
       
       const all_file = await prisma.file_info.findMany({
@@ -137,6 +139,8 @@ app.use(express.json())
 
     const result_watch = await prisma.$queryRaw`call pr_watch_info(${p_info.id},${w_t},${w_7})`
     const result_star = await prisma.$queryRaw`call pr_star_info(${p_info.id},${s_t},${s_7})`
+    //所有的存储过程调用语句都返回一个数组
+    //此处的两个info数组只有一项[0]，其中两项f0,f1 分别是总数和过去七天
       
       const all_edition = await prisma.$queryRaw`call pr_view_all_edition(${f_info.id})`
 
@@ -163,8 +167,8 @@ app.use(express.json())
     let limited_result=new Array;
 
     const all_result = await prisma.$queryRaw`call pr_search(${p_name})`
-
     const n = await prisma.$queryRaw`call pr_how_many_results(${p_name},${n_})`
+    //所有的存储过程调用语句都返回一个数组
 
     var max_page=Math.ceil(parseInt(n[0].f0)/width);//最大页数
 
