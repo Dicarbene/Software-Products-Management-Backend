@@ -36,8 +36,21 @@ end//
 delimiter ;
 
 delimiter //
-drop procedure if exists pr_//
-create procedure pr_(
+drop procedure if exists pr_new_file//
+create procedure pr_new_file(
+in p_id int,
+in c_id varchar(20),
+in f_name varchar(45)
+)
+begin
+insert into file_info(product_id,creator_id,file_name,latest_change_time)
+values(p_id,c_id,f_name,current_timestamp());
+end//
+delimiter ;
+
+delimiter //
+drop procedure if exists pr_new_content//
+create procedure pr_new_content(
 in f_id int,
 in url varchar(200)
 )

@@ -74,8 +74,6 @@ insert into watch_of_product(u_id,p_id)values
 end//
 delimiter ;
 
-#一般情况下不能UNwatch
-/*
 delimiter //
 drop procedure if exists pr_to_unwatch//
 create procedure pr_to_unwatch(
@@ -88,4 +86,3 @@ where u_id=(select _id from user_info where user_log_id=u_log_id)
 and p_id=(select _id from product_info where product_name=p_name);
 end//
 delimiter ;
-*/

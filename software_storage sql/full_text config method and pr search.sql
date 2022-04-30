@@ -24,9 +24,10 @@ select @@ngram_token_size;
 
 #更改配置文件之后一定要执行下面语句，否则参数不生效
 #repair table product_info quick;
+
 delimiter //
-drop procedure if exists pr_search//
-create procedure pr_search(
+drop procedure if exists pr_search_p//
+create procedure pr_search_p(
 in p_name varchar(45)
 )
 begin
@@ -34,19 +35,36 @@ begin
     declare ci varchar(45);
     set no_ci=concat(Num_char_extract(p_name,2),'*');
     set ci=Num_char_extract(p_name,3);
-		select _id,product_name,creator_id 
+    select a._id,a.product_name,a.creator_id,
+    ifnull(b.n_w,0) n_of_w,ifnull(c.n_s,0) n_of_s 
+    from
+		(
+        select _id,product_name,creator_id 
         from product_info
 		where match(product_name) against(no_ci in boolean mode)
 		union
 		select _id,product_name,creator_id
         from product_info
-		where match(product_name) against(ci);
+		where match(product_name) against(ci)
+        ) a 
+        left join
+        (
+        select ta.p_id,count(ta._id) n_w from watch_of_product ta
+        join product_info tb on ta.p_id=tb._id
+        group by p_id
+        ) b on a._id=b.p_id
+        left join
+        (
+        select ta.p_id,count(ta._id) n_s from star_of_product ta
+        join product_info tb on ta.p_id=tb._id
+        group by p_id
+        ) c on a._id=c.p_id;
 end//
 delimiter //
 
 delimiter //
-drop procedure if exists pr_how_many_results//
-create procedure pr_how_many_results(
+drop procedure if exists pr_how_many_results_p//
+create procedure pr_how_many_results_p(
 in p_name varchar(45),
 out n int
 )
@@ -68,6 +86,53 @@ begin
 end//
 delimiter //
 
+delimiter //
+drop procedure if exists pr_search_u//
+create procedure pr_search_u(
+in u_id varchar(20)
+)
+begin
+	declare no_ci varchar(20);
+    #declare ci varchar(45);
+    set no_ci=concat(Num_char_extract(u_id,2),'*');
+    #set ci=Num_char_extract(p_name,3);
+		select _id,user_log_id,email,profile_pic_url 
+        from user_info
+		where match(user_log_id) against(no_ci in boolean mode);
+		#union
+		#select _id,product_name,creator_id
+        #from product_info
+		#where match(product_name) against(ci);
+        #看清哦，这里没有更改成user_info
+end//
+delimiter //
+
+delimiter //
+drop procedure if exists pr_how_many_results_u//
+create procedure pr_how_many_results_u(
+in u_id varchar(20),
+out n int
+)
+begin
+	declare no_ci varchar(20);
+    #declare ci varchar(45);
+    set no_ci=concat(Num_char_extract(u_id,2),'*');
+    #set ci=Num_char_extract(p_name,3);
+	select count(_id) into n from
+    (
+		select _id,user_log_id,email,profile_pic_url 
+        from user_info
+		where match(user_log_id) against(no_ci in boolean mode)
+		#union
+		#select _id,product_name,creator_id
+        #from product_info
+		#where match(product_name) against(ci)
+        #看清哦，这里没有更改成user_info
+    ) t;
+end//
+delimiter //
+
 set @x=0;
-call pr_how_many_results('tes软件',@x);
+call pr_search_p('软件');
+call pr_search_u('s');
 select @x;

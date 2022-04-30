@@ -86,6 +86,7 @@ model user_info {
   @@index([email], map: "idx_email")
   @@index([password], map: "idx_passwd")
   @@index([user_log_id], map: "idx_u_id")
+  @@index([user_log_id], map: "idx_full_u_log_id")
 }
 
 model watch_of_product {
