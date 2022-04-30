@@ -22,8 +22,8 @@ model file_edition {
   id           Int          @id @default(autoincrement()) @map("_id")
   file_info_id Int
   file_id      Int
-  next_id      Int?         @default(0)
-  file_content file_content @relation(fields: [file_id], references: [id], onDelete: Cascade, map: "fk_to_control_edition")
+  next_id      Int?         @default(99999)
+  file_content file_content @relation(fields: [file_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_to_control_edition")
 
   @@index([file_id], map: "fk_idx_content_id")
   @@index([file_info_id], map: "idx_file_info_id")
@@ -32,17 +32,18 @@ model file_edition {
 model file_info {
   id                 Int            @id @default(autoincrement()) @map("_id")
   product_id         Int
-  file_name          String         @db.VarChar(45)
+  file_name          String         @unique(map: "file_name_UNIQUE") @db.VarChar(45)
   latest_change_time DateTime       @db.Timestamp(0)
   product_info       product_info   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_file_info_product_info1")
   file_content       file_content[]
 
   @@index([product_id], map: "fk_file_info_product_info1_idx")
+  @@unique(fields: [product_id, file_name], name: "PidAndFname")
 }
 
 model product_info {
   id                 Int                  @id @default(autoincrement()) @map("_id")
-  product_name       String               @db.VarChar(45)
+  product_name       String               @unique(map: "product_name_UNIQUE") @db.VarChar(45)
   creator_id         String               @db.VarChar(20)
   creator_email      String               @db.VarChar(45)
   creator_pic_url    String?              @db.VarChar(200)
@@ -51,8 +52,9 @@ model product_info {
   star_of_product    star_of_product[]
   watch_of_product   watch_of_product[]
 
-  @@index([product_name], map: "full_idx_name")
+  @@index([product_name], map: "idx_full_p_name")
   @@index([product_name], map: "idx_name")
+  @@unique(fields: [product_name, creator_id], name: "NameAndId")
 }
 
 model star_of_product {
