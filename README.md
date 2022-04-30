@@ -1,5 +1,6 @@
 # Software-Products-Management-Backend
 (WIP) 软件产品库-后端部分
+不要随便pull db！！！schema.prisma 和数据库定义不尽相同！！！
 ## Getting started
 
 ### 1. Download example and install dependencies
@@ -64,7 +65,7 @@ You can access the REST API of the server using the following endpoints:
 
 - `/user/:u_id/product/:p_id/file/:f_id`: 用户内置主键为`u_id`的用户创建的内置主键为`p_id`的产品的内置主键为`f_id`的文件的主要信息
 
-- `/users`: 所有用户的信息
+- `/users`: 部分活跃用户的信息
 ### `POST`
 
 - `/login`: 创建新用户
