@@ -21,9 +21,21 @@
 
     用户名为`u_log_id`创建的产品名为`p_name`的产品中文件名为`f_name`的代码的迭代版本
 
-- `/users`
+- `/users/p=:page`
 
-    全部用户
+  查看全部的用户
+
+    - 分页 `page`
+      
+      结果的第几页
+
+- `/products/p=:page`
+
+  查看全部产品
+
+    - 分页 `page`
+      
+      结果的第几页
 
 - `/searchProduct/type=:type_of_search&q=:p_name&p=:page`
   - 搜索类型 `type_of_search`

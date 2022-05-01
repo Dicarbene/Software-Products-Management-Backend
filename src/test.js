@@ -1,6 +1,7 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { json } = require('express/lib/response')
+const res = require('express/lib/response')
 
 const prisma = new PrismaClient()
 const app = express()
@@ -153,38 +154,6 @@ app.use(express.json())
     //}
   })
 
-  //仍未完成
-  app.post(`/user=:u_log_id/product=:p_name/newFile`, async (req, res) => {//新建文件
-    const { u_log_id ,p_name }=req.params
-    const { c_id, f_name } = req.body
-      //try{
-
-        const u_info = await prisma.user_info.findUnique({
-          where: { user_log_id: u_log_id },
-        })
-    
-        if(u_info==null)res.status(404)
-
-        const p_info = await prisma.product_info.findUnique({
-          where: { 
-            NameAndId:{
-              product_name: p_name,
-              creator_id: u_log_id,
-            }
-          },
-        })
-    
-        if(p_info==null)res.status(404)
-
-        
-
-      const x=[p_info,result_watch,result_star,all_file]//product_info已有冗余列，不需要返回u_info
-      res.json(x)
-    //}catch(error){
-      //res.status(404).send('something wrong')
-    //}
-  })
-
   app.get(`/user=:u_log_id/product=:p_name/code=:f_name`, async (req, res) => {//文件信息
     const { u_log_id, p_name, f_name } = req.params
 
@@ -237,6 +206,8 @@ app.use(express.json())
   app.get(`/searchProduct/type=:type_of_search&q=:query&p=:page`, async (req, res) => {
     const { query, type_of_search, page } = req.params
 
+    //try{
+
     var adjusted_page=parseInt(page)
 
     if(adjusted_page<=0)adjusted_page = 1;//处理所有负数据和0，定为第一页
@@ -265,9 +236,6 @@ app.use(express.json())
     }
     else res.status(404);
 
-    var max_page=Math.ceil(n/width);//最大页数
-    //var max_page=Math.ceil(parseInt(n[0].f0)/width);//最大页数
-
     l=0;i=0;
 
     for(i=(adjusted_page-1)*width;i<=adjusted_page*width-1;i++){
@@ -282,13 +250,90 @@ app.use(express.json())
     const x=[total,limited_result]//应当判断limited_result[0]是否为空，空则显示没有更多信息
 
     res.json(x)
+    //}catch(error){
+      //res.send('something wrong')
+    //}
   })
 
 
-app.get('/users', async (req, res) => {
-    const users = await prisma.user_info.findMany()
-    res.json(users)
+app.get('/users/p=:page', async (req, res) => {
+  const  {page }=req.params
+
+  //try{
+  var adjusted_page=parseInt(page)
+
+  if(adjusted_page<=0)adjusted_page = 1;//处理所有负数据和0，定为第一页
+
+  var n_//必须的传值手段，定义而不用
+
+  var i,l,width=new Number;
+
+  width=2;//设置一页有多少条搜索结果
+
+  let all_result=new Array;
+  let n=new Number;
+  let limited_result=new Array;
+
+  all_result = await prisma.user_info.findMany()
+  n=all_result.length
+
+  l=0;i=0;
+
+    for(i=(adjusted_page-1)*width;i<=adjusted_page*width-1;i++){
+      limited_result[l]=all_result[i];
+      l++;
+    }
+
+    var t = n + "";
+    var str = '{"total_num":'+t+'}';
+    var total = JSON.parse(str);  //数字转化JSON格式
+
+    const x=[total,limited_result]//应当判断limited_result[0]是否为空，空则显示没有更多信息
+    res.json(x)
+  //}catch(error){
+    //res.send('something wrong')
+  //}
 })
+
+app.get('/products/p=:page', async (req, res) => {
+  const  {page }=req.params
+
+  //try{
+  var adjusted_page=parseInt(page)
+
+  if(adjusted_page<=0)adjusted_page = 1;//处理所有负数据和0，定为第一页
+
+  var n_//必须的传值手段，定义而不用
+
+  var i,l,width=new Number;
+
+  width=2;//设置一页有多少条搜索结果
+
+  let all_result=new Array;
+  let n=new Number;
+  let limited_result=new Array;
+
+  all_result = await prisma.$queryRaw`call pr_all_products()`
+  n=all_result.length
+
+  l=0;i=0;
+
+    for(i=(adjusted_page-1)*width;i<=adjusted_page*width-1;i++){
+      limited_result[l]=all_result[i];
+      l++;
+    }
+
+    var t = n + "";
+    var str = '{"total_num":'+t+'}';
+    var total = JSON.parse(str);  //数字转化JSON格式
+
+    const x=[total,limited_result]//应当判断limited_result[0]是否为空，空则显示没有更多信息
+    res.json(x)
+  //}catch(error){
+    //res.send('something wrong')
+  //}
+})
+
 const server = app.listen(3000, () =>
   console.log(`
 🚀 Server ready at: http://localhost:3000

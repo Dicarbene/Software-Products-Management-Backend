@@ -23,6 +23,11 @@ call pr_log_on('12ss3@qq.com','123456',@__if);
 set @___if=0;
 call pr_new_product('软件测试test','zzz',@___if);
 
+call pr_new_product('测试abc','zzz',@___if);
+call pr_new_product('软件工程','zzz',@___if);
+call pr_new_product('工程sb软12件','zzz',@___if);
+call pr_new_product('zzzzisback','zzz',@___if);
+
 #测试参与、收藏、查看
 call pr_new_participate('zzz','软件测试test');
 call pr_to_star('zzz','软件测试test');
@@ -43,12 +48,16 @@ call pr_to_unstar('zzz','软件测试test');
 #测试数据统计
 set @t=0;
 set @l=0;
-call pr_watch_info('软件测试test',@t,@l);
+call pr_watch_info(2,@t,@l);
+select @t,@l;
+call pr_watch_info(3,@t,@l);
 select @t,@l;
 
 set @tt=0;
 set @ll=0;
-call pr_star_info('软件测试test',@tt,@ll);
+call pr_star_info(2,@tt,@ll);
+select @tt,@ll;
+call pr_star_info(3,@tt,@ll);
 select @tt,@ll;
 
 #测试上传文件内容
