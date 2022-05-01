@@ -2,6 +2,7 @@ delimiter //
 drop procedure if exists pr_new_product//
 create procedure pr_new_product(
 in _name varchar(45),
+in introduct varchar(100),
 in u_id varchar(20),
 out if_exists int
 )
@@ -15,8 +16,8 @@ begin
 	select email into _e from user_info where user_log_id=u_id;
 	select profile_pic_url into _u from user_info where user_log_id=u_id;
 	insert into product_info
-    (product_name,creator_id,creator_email,creator_pic_url)
-	values(_name,u_id,_e,_u);
+    (product_name,introduction,creator_id,creator_email,creator_pic_url)
+	values(_name,introduct,u_id,_e,_u);
 end;
 end if;
 end//

@@ -35,15 +35,15 @@ begin
     declare ci varchar(45);
     set no_ci=concat(Num_char_extract(p_name,2),'*');
     set ci=Num_char_extract(p_name,3);
-    select a._id,a.product_name,a.creator_id,
+    select a._id,a.product_name,a.creator_id,a.introduction, 
     ifnull(b.n_w,0) n_of_w,ifnull(c.n_s,0) n_of_s 
     from
 		(
-        select _id,product_name,creator_id 
+        select _id,product_name,creator_id,introduction 
         from product_info
 		where match(product_name) against(no_ci in boolean mode)
 		union
-		select _id,product_name,creator_id
+		select _id,product_name,creator_id,introduction 
         from product_info
 		where match(product_name) against(ci)
         ) a 
