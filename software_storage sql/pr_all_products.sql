@@ -20,7 +20,8 @@ select a._id,a.product_name,a.creator_id,a.introduction,
         select ta.p_id,count(ta._id) n_s from star_of_product ta
         join product_info tb on ta.p_id=tb._id
         group by p_id
-        ) c on a._id=c.p_id;
+        ) c on a._id=c.p_id
+	order by n_of_w desc,n_of_s desc;
 end//
 delimiter ;
 

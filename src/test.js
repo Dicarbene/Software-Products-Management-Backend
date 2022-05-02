@@ -11,6 +11,21 @@ app.use(express.json())
  app.post(`/register`, async (req, res) => {
     const { id, email, password } = req.body
 
+    //try{
+      /*
+    var sIdReg = /^[a-zA-Z0-9_-]{4,16}$/;    //用户名正则，4到16位（字母，数字，下划线，减号）
+    var sEmailReg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;  //邮箱,标准邮箱格式
+    var sPasswordReg = /^[\w_-]{6,16}$/;  //密码，6到16位（大小写字母、数字、下划线、减号）
+
+    var idValid=true
+    var emailValid=true
+    var passwordValid=true
+
+    if(!sIdReg.test(id))idValid=false
+    if(!sEmailReg.test(email))emailValid=false
+    if(!sPasswordReg.test(password))passwordValid=false
+    */
+
     var e_id=0//是否存在id，0为不存在
     var e_email=0//是否存在email，0为不存在
     var _if=0;//是否创建成功，1为成功
@@ -19,28 +34,39 @@ app.use(express.json())
 
     console.log(result);
     res.json(result)
+    //}catch(error){
+      //res.send('something wrong')
+    //}
   })
 
   app.post(`/login`, async (req, res) => {
     const { id_or_email, password } = req.body
 
+    //try{
     var _if=0;//是否登录成功，1为成功
 
     const result = await prisma.$queryRaw`call pr_log_on(${id_or_email},${password},${_if})`
 
     console.log(result);
     res.json(result)
+    //}catch(error){
+      //res.send('something wrong')
+    //}
   })
 
   app.post(`/newProduct`, async (req, res) => {
     const { p_name, u_id } = req.body
 
+    //try{
     var _if=0;//是否存在同名，0为不存在，即成功创建
 
     const result = await prisma.$queryRaw`call pr_new_product(${p_name},${u_id},${_if})`
 
     console.log(result);
     res.json(result)
+    //}catch(error){
+      //res.send('something wrong')
+    //}
   })
 
   app.get(`/user=:u_log_id`, async (req, res) => {//用户信息
@@ -49,14 +75,25 @@ app.use(express.json())
     //try{
       const u_info = await prisma.user_info.findUnique({
       where: { user_log_id: u_log_id },
+      select: { 
+        id: true,
+        user_log_id: true,
+        email: true,
+        create_time: true,
+        latest_logon: true,
+        profile_pic_url: true,
+        password: false,
+      },
     })
 
     if(u_info==null)res.status(404)
 
+      const p_of_this_u = await prisma.$queryRaw`call pr_all_p_of_one_u(${u_log_id})`
+
       const watched = await prisma.$queryRaw`call pr_recent_watch(${u_info.id})`
       const stared = await prisma.$queryRaw`call pr_recent_star(${u_info.id})`
 
-      const x=[u_info,watched,stared]
+      const x=[u_info,p_of_this_u,watched,stared]
 
       res.json(x)
     //}catch(error){
@@ -274,7 +311,7 @@ app.get('/users/p=:page', async (req, res) => {
   let n=new Number;
   let limited_result=new Array;
 
-  all_result = await prisma.user_info.findMany()
+  all_result = await prisma.$queryRaw`call pr_all_users()`
   n=all_result.length
 
   l=0;i=0;
