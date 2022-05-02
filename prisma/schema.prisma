@@ -12,6 +12,7 @@ model file_content {
   file_info_id Int
   file_url     String         @db.VarChar(200)
   file_name    String         @db.VarChar(45)
+  update_time  DateTime       @db.Timestamp(0)
   file_info    file_info      @relation(fields: [file_info_id], references: [id], onDelete: Cascade, map: "fk_to_show_content")
   file_edition file_edition[]
 
@@ -44,6 +45,7 @@ model file_info {
 model product_info {
   id                 Int                  @id @default(autoincrement()) @map("_id")
   product_name       String               @unique(map: "product_name_UNIQUE") @db.VarChar(45)
+  introduction       String               @db.VarChar(100)
   creator_id         String               @db.VarChar(20)
   creator_email      String               @db.VarChar(45)
   creator_pic_url    String?              @db.VarChar(200)
