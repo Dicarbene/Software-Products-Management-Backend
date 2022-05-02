@@ -20,6 +20,7 @@ select @__if;
 call pr_log_on('12ss3@qq.com','123456',@__if);
 
 #测试创建产品
+#！！创建产品现需要输入介绍
 set @___if=0;
 call pr_new_product('软件测试test','zzz',@___if);
 
@@ -27,6 +28,8 @@ call pr_new_product('测试abc','zzz',@___if);
 call pr_new_product('软件工程','zzz',@___if);
 call pr_new_product('工程sb软12件','zzz',@___if);
 call pr_new_product('zzzzisback','zzz',@___if);
+
+call pr_new_product('ww','shuohua','xxx',@___if);
 
 #测试参与、收藏、查看
 call pr_new_participate('zzz','软件测试test');
@@ -38,6 +41,9 @@ call pr_to_watch('zzz','软件产品库');
 call pr_to_watch('zzz','软件产品库');
 
 call pr_to_star('zzz','软件产品库');
+call pr_to_star('zzz','ww');
+
+call pr_to_star('xxx','软件测试test');
 
 #测试多次查看
 call pr_to_watch('zzz','软件测试test');
