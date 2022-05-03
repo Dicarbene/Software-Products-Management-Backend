@@ -12,7 +12,7 @@ app.use(express.json())
     const { id, email, password } = req.body
 
     //try{
-      /*
+      
     let sIdReg = /^[a-zA-Z0-9_-]{4,16}$/;    //用户名正则，4到16位（字母，数字，下划线，减号）
     let sEmailReg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;  //邮箱,标准邮箱格式
     let sPasswordReg = /^[\w_-]{6,16}$/;  //密码，6到16位（大小写字母、数字、下划线、减号）
@@ -24,16 +24,20 @@ app.use(express.json())
     if(!sIdReg.test(id))idValid=false
     if(!sEmailReg.test(email))emailValid=false
     if(!sPasswordReg.test(password))passwordValid=false
-    */
 
-    let e_id=0//是否存在id，0为不存在
-    let e_email=0//是否存在email，0为不存在
-    let _if=0;//是否创建成功，1为成功
-
-    const result = await prisma.$queryRaw`call pr_log_in(${id},${password},${email},${e_id},${e_email},${_if})`
-
-    console.log(result);
-    res.json(result)
+    if(idValid&&emailValid&&passwordValid){
+      let e_id=0//是否存在id，0为不存在
+      let e_email=0//是否存在email，0为不存在
+      let _if=0;//是否创建成功，1为成功
+  
+      const result = await prisma.$queryRaw`call pr_log_in(${id},${password},${email},${e_id},${e_email},${_if})`
+  
+      //console.log(result);
+      res.json(result)
+    }else{
+      const x=[idValid,emailValid,passwordValid]
+      res.json(x)
+    }
     //}catch(error){
       //res.send('something wrong')
     //}
@@ -47,7 +51,28 @@ app.use(express.json())
 
     const result = await prisma.$queryRaw`call pr_log_on(${id_or_email},${password},${_if})`
 
-    console.log(result);
+    //console.log(result);
+    res.json(result)
+    //}catch(error){
+      //res.send('something wrong')
+    //}
+  })
+
+  app.post(`/userInfoUpdate`, async (req, res) => {//更改个人信息，用户名不可更改
+    const { log_id, password, email, pic_url} = req.body
+
+    //try{
+      const result = await prisma.user_info.update({
+        where: {
+          user_log_id: log_id,
+        },
+        data: {
+          password: password,
+          email: email,
+          profile_pic_url: pic_url,
+        },
+      })
+
     res.json(result)
     //}catch(error){
       //res.send('something wrong')
@@ -62,8 +87,59 @@ app.use(express.json())
 
     const result = await prisma.$queryRaw`call pr_new_product(${p_name},${u_id},${_if})`
 
-    console.log(result);
+    //console.log(result);
     res.json(result)
+    //}catch(error){
+      //res.send('something wrong')
+    //}
+  })
+
+  app.get(`/teamManagement`, async (req, res) => {//参与进项目：显示管理者的所有项目
+    const { watcher_id } = req.body
+
+    //try{
+
+    const result = await prisma.product_info.findMany({
+      where: {creator_id: watcher_id, },
+      select: {
+        id: true,
+        product_name: true, 
+      },
+    })
+
+    res.json(result)
+    //}catch(error){
+      //res.send('something wrong')
+    //}
+  })
+
+  app.post(`/teamManagement`, async (req, res) => {//参与进项目：设置队友
+    const { watcher_id, teammate_id ,p_name } = req.body
+
+    //try{
+      const id_result = await prisma.user_info.findUnique({
+        where: {user_log_id: teammate_id, },
+      })
+      if(id_result==null)res.send('查无此人！')
+
+      let i=new Number
+      let name_arr
+      let result=new Array
+
+      for(i=0;i<p_name.length;i++){
+        //try{
+          name_arr=p_name[i];
+          result[i]=await prisma.$queryRaw`call pr_new_participate(${teammate_id},${watcher_id},${name_arr})`
+          result[i]=result[i][0]
+        //}catch(error){
+          //res.send('something wrong')
+        }
+        let result_adjusted= JSON.parse(JSON.stringify(result).replace(/f0/g,"participationState"))
+        const x=[p_name,result_adjusted]
+
+      res.json(x)
+
+        
     //}catch(error){
       //res.send('something wrong')
     //}
@@ -147,13 +223,19 @@ app.use(express.json())
     //}
   })
 
-  app.post(`/user=:u_log_id/product=:p_name`, async (req, res) => {//关注、点赞
+  app.post(`/user=:u_log_id/product=:p_name`, async (req, res) => {//关注、点赞、新建文件
     const { u_log_id ,p_name }=req.params
-    const { watcher_id ,move_type}=req.body
+    const { watcher_id ,move_type, f_name}=req.body//f_name只有在move=5时才应当被接收
       //try{
 
         const u_info = await prisma.user_info.findUnique({
           where: { user_log_id: u_log_id },
+        })
+    
+        if(u_info==null)res.status(404)
+
+        const w_info = await prisma.user_info.findUnique({
+          where: { user_log_id: watcher_id },
         })
     
         if(u_info==null)res.status(404)
@@ -174,9 +256,10 @@ app.use(express.json())
       //2:unwatch
       //3:star
       //4:un_star
+      //5:new file
        if(move_type==1){
         await prisma.$queryRaw`call pr_to_watch(${watcher_id},${p_name})`
-        //alert('关注成功')
+        //alert('关注成功')，应当修改
        }
        else if(move_type==2){
         await prisma.$queryRaw`call pr_to_unwatch(${watcher_id},${p_name})`
@@ -190,7 +273,79 @@ app.use(express.json())
         await prisma.$queryRaw`call pr_to_unstar(${watcher_id},${p_name})`
         //alert('取消成功')
        }
+       else if(move_type==5){
+        if(watcher_id!=u_log_id){
+          const result = await prisma.participation_info.findUnique({
+            where: {
+              id_u_id_p_id:{
+                u_id: w_info.id,
+                p_id: p_info.id,
+            } },
+          })
+          if (result==null)res.send('you have on right to create file')//应当修改
+          else{
+            await prisma.$queryRaw`call pr_new_file(${p_info.id},${watcher_id},${f_name})`
+            //跳到./code
+          }
+        }
+        else{
+          await prisma.$queryRaw`call pr_new_file(${p_info.id},${watcher_id},${f_name})`
+          //跳到./code
+        }
+       }
        else res.status(404)
+
+    //}catch(error){
+      //res.status(404).send('something wrong')
+    //}
+  })
+
+  app.get(`/user=:u_log_id/product=:p_name/coworkers`, async (req, res) => {//一个仓库的所有协作者
+    const { u_log_id ,p_name }=req.params
+      //try{
+        const u_info = await prisma.user_info.findUnique({
+          where: { user_log_id: u_log_id },
+        })
+    
+        if(u_info==null)res.status(404)
+
+        const p_info = await prisma.product_info.findUnique({
+          where: { 
+            NameAndId:{
+              product_name: p_name,
+              creator_id: u_log_id,
+            },
+          },
+        })
+    
+        if(p_info==null)res.status(404)
+
+        const coworkers_info = await prisma.participation_info.findMany({
+          where: { p_id: p_info.id },
+        })
+
+        let i=new Number
+        let userHaveRight=new Array
+        for(i=0;i<coworkers_info.length;i++){
+          userHaveRight[i] = await prisma.user_info.findUnique({
+            where: { id: coworkers_info[i].u_id},
+            select: {
+              user_log_id: true,
+            }
+          })
+        }
+
+        const creator = await prisma.user_info.findUnique({
+          where: { user_log_id: u_log_id },
+          select: {
+            user_log_id: true,
+          }
+        })
+
+        userHaveRight.push(creator)
+        let ans = [];
+        for(let i = 0;i<userHaveRight.length;++i) ans.push(userHaveRight[i]["user_log_id"]);
+        res.json(ans)
 
     //}catch(error){
       //res.status(404).send('something wrong')
@@ -256,7 +411,50 @@ app.use(express.json())
     //}
   })
 
-  app.get(`/searchProduct/type=:type_of_search&q=:query&p=:page`, async (req, res) => {
+  app.post(`/user=:u_log_id/product=:p_name/code=:f_name`, async (req, res) => {//文件上传
+    const { u_log_id, p_name, f_name } = req.params
+    const { watcher_id, coworkers, file_url} = req.body
+
+    //try{
+      const u_info = await prisma.user_info.findUnique({
+        where: { user_log_id: watcher_id },
+      })
+  
+      if(u_info==null)res.status(404)
+
+      const p_info = await prisma.product_info.findUnique({
+        where: { 
+          NameAndId:{
+            product_name: p_name,
+            creator_id: u_log_id,
+          }
+        },
+      })
+  
+      if(p_info==null)res.status(404)
+
+      const f_info = await prisma.file_info.findUnique({
+        where: { 
+          PidAndFname: {
+            product_id: p_info.id,
+            file_name: f_name,
+          }
+        },
+      })
+      //res.json(f_info)
+  
+      if(f_info==null)res.status(404)
+
+      if(f_info.creator_log_id){
+        await prisma.$queryRaw`call pr_new_content(${f_info.id},${file_url})`
+      }
+      else res.send('no right to update file')//改为alert
+    //}catch(error){
+      //res.status(404).send('something wrong')
+    //}
+  })
+
+  app.get(`/searchProduct/type=:type_of_search&q=:query&p=:page`, async (req, res) => {//基于全文索引的简单搜索
     const { query, type_of_search, page } = req.params
 
     //try{
@@ -352,7 +550,6 @@ app.get('/users/p=:page', async (req, res) => {
       limited_result[l]=all_result[i];
       l++;
     }
-
     let if_out = 0
     if(limited_result[0]==null){//判断是否没有找到更多内容
       if_out = 1

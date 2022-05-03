@@ -39,16 +39,16 @@ delimiter //
 drop procedure if exists pr_new_file//
 create procedure pr_new_file(
 in p_id int,
-in c_id varchar(20),
+in c_id varchar(40),
 in f_name varchar(45)
 )
 begin
-declare time_now timestamp;
-set time_now=current_timestamp();
-insert into file_info(product_id,creator_id,file_name,latest_change_time)
-values(p_id,c_id,f_name,time_now);
+insert into file_info(product_id,creator_log_id,file_name)
+values(p_id,c_id,f_name);
 end//
 delimiter ;
+
+#call pr_new_file(3,'zzz','someCode');
 
 delimiter //
 drop procedure if exists pr_new_content//

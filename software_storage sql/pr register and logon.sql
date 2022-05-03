@@ -1,7 +1,7 @@
 delimiter //
 drop procedure if exists pr_register//
 create procedure pr_register(
-in u_id varchar(20),
+in u_id varchar(40),
 in passwd varchar(45),
 in _email varchar(45),
 out existsed_id int,

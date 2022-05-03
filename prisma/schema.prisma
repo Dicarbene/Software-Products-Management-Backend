@@ -33,7 +33,8 @@ model file_edition {
 model file_info {
   id                 Int            @id @default(autoincrement()) @map("_id")
   product_id         Int
-  file_name          String         @unique(map: "file_name_UNIQUE") @db.VarChar(45)
+  creator_log_id     String         @db.VarChar(40)
+  file_name          String         @db.VarChar(45)
   latest_change_time DateTime       @db.Timestamp(0)
   product_info       product_info   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_file_info_product_info1")
   file_content       file_content[]
@@ -44,9 +45,9 @@ model file_info {
 
 model product_info {
   id                 Int                  @id @default(autoincrement()) @map("_id")
-  product_name       String               @unique(map: "product_name_UNIQUE") @db.VarChar(45)
+  product_name       String               @db.VarChar(45)
   introduction       String               @db.VarChar(100)
-  creator_id         String               @db.VarChar(20)
+  creator_id         String               @db.VarChar(40)
   creator_email      String               @db.VarChar(45)
   creator_pic_url    String?              @db.VarChar(200)
   file_info          file_info[]
@@ -56,7 +57,7 @@ model product_info {
 
   @@index([product_name], map: "idx_full_p_name")
   @@index([product_name], map: "idx_name")
-  @@unique(fields: [product_name, creator_id], name: "NameAndId")
+   @@unique(fields: [product_name, creator_id], name: "NameAndId")
 }
 
 model star_of_product {
@@ -75,7 +76,7 @@ model star_of_product {
 
 model user_info {
   id                 Int                  @id @default(autoincrement()) @map("_id")
-  user_log_id        String               @unique(map: "user_id_UNIQUE") @db.VarChar(20)
+  user_log_id        String               @unique(map: "user_id_UNIQUE") @db.VarChar(40)
   password           String               @db.VarChar(45)
   email              String               @db.VarChar(45)
   create_time        DateTime             @db.Timestamp(0)
@@ -86,9 +87,9 @@ model user_info {
   watch_of_product   watch_of_product[]
 
   @@index([email], map: "idx_email")
+  @@index([user_log_id], map: "idx_full_log_id")
   @@index([password], map: "idx_passwd")
   @@index([user_log_id], map: "idx_u_id")
-  @@index([user_log_id], map: "idx_full_u_log_id")
 }
 
 model watch_of_product {

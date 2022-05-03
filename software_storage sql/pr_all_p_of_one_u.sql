@@ -1,7 +1,7 @@
 delimiter //
 drop procedure if exists pr_all_p_of_one_u//
 create procedure pr_all_p_of_one_u(
-in u_log_id varchar(20)
+in u_log_id varchar(40)
 )
 begin
 	select a._id,a.product_name,a.introduction,
