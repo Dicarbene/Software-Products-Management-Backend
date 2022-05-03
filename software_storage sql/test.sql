@@ -10,14 +10,13 @@ call pr_register('xsss','123456','12ss3@qq.com',@x,@y,@_if);
 call pr_register('xax','123456','14223@qq.com',@x,@y,@_if);
 call pr_register('qqx','123456','1231w@qq.com',@x,@y,@_if);
 
-call pr_logon('123aa','1234567890','@@@@',@x,@y,@_if);
 select @x,@y,@_if;
 
 #测试登录
 set @__if=0;
-call pr_log_on('xxx','123456',@__if);
+call pr_login('xxx','123456',@__if);
 select @__if;
-call pr_log_on('12ss3@qq.com','123456',@__if);
+call pr_login('12ss3@qq.com','123456',@__if);
 
 #测试创建产品
 #！！创建产品现需要输入介绍
@@ -67,7 +66,7 @@ call pr_star_info(3,@tt,@ll);
 select @tt,@ll;
 
 #测试上传文件内容
-call pr_(1,'url/url');
-call pr_(1,'xxx/xxx');
+call pr_new_content(1,'url/url');
+call pr_new_content(1,'xxx/xxx');
 
 call pr_view_all_edition(1);

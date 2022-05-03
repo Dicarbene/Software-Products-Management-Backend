@@ -89,10 +89,10 @@ delimiter //
 delimiter //
 drop procedure if exists pr_search_u//
 create procedure pr_search_u(
-in u_id varchar(20)
+in u_id varchar(40)
 )
 begin
-	declare no_ci varchar(20);
+	declare no_ci varchar(40);
     #declare ci varchar(45);
     set no_ci=concat(Num_char_extract(u_id,2),'*');
     #set ci=Num_char_extract(p_name,3);
@@ -110,11 +110,11 @@ delimiter //
 delimiter //
 drop procedure if exists pr_how_many_results_u//
 create procedure pr_how_many_results_u(
-in u_id varchar(20),
+in u_id varchar(40),
 out n int
 )
 begin
-	declare no_ci varchar(20);
+	declare no_ci varchar(40);
     #declare ci varchar(45);
     set no_ci=concat(Num_char_extract(u_id,2),'*');
     #set ci=Num_char_extract(p_name,3);
