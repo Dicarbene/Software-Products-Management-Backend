@@ -10,9 +10,9 @@ datasource db {
 model file_content {
   id           Int            @id @default(autoincrement()) @map("_id")
   file_info_id Int
-  file_url     String         @db.VarChar(200)
+  file_url     String         @db.LongText
   file_name    String         @db.VarChar(45)
-  update_time  DateTime       @db.Timestamp(0)
+  update_time  DateTime       @default(now()) @db.Timestamp(0)
   file_info    file_info      @relation(fields: [file_info_id], references: [id], onDelete: Cascade, map: "fk_to_show_content")
   file_edition file_edition[]
 
@@ -35,7 +35,7 @@ model file_info {
   product_id         Int
   creator_log_id     String         @db.VarChar(40)
   file_name          String         @db.VarChar(45)
-  latest_change_time DateTime       @db.Timestamp(0)
+  latest_change_time DateTime       @default(now()) @db.Timestamp(0)
   product_info       product_info   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_file_info_product_info1")
   file_content       file_content[]
 
@@ -57,7 +57,7 @@ model product_info {
 
   @@index([product_name], map: "idx_full_p_name")
   @@index([product_name], map: "idx_name")
-   @@unique(fields: [product_name, creator_id], name: "NameAndId")
+  @@unique(fields: [product_name, creator_id], name: "NameAndId")
 }
 
 model star_of_product {
@@ -79,7 +79,7 @@ model user_info {
   user_log_id        String               @unique(map: "user_id_UNIQUE") @db.VarChar(40)
   password           String               @db.VarChar(45)
   email              String               @db.VarChar(45)
-  create_time        DateTime             @db.Timestamp(0)
+  create_time        DateTime             @default(now()) @db.Timestamp(0)
   latest_logon       DateTime?            @db.Timestamp(0)
   profile_pic_url    String?              @db.VarChar(200)
   participation_info participation_info[]
@@ -96,7 +96,7 @@ model watch_of_product {
   id                  Int          @default(autoincrement()) @map("_id")
   u_id                Int
   p_id                Int
-  latest_watched_time DateTime     @db.Timestamp(0)
+  latest_watched_time DateTime     @default(now()) @db.Timestamp(0)
   product_info        product_info @relation(fields: [p_id], references: [id], onDelete: Cascade, map: "fk_to_be_watched")
   user_info           user_info    @relation(fields: [u_id], references: [id], onDelete: Cascade, map: "fk_to_watch")
 
@@ -114,6 +114,7 @@ model participation_info {
   user_info    user_info    @relation(fields: [u_id], references: [id], onDelete: Cascade, map: "fk_to_particepate")
 
   @@id([id, u_id, p_id])
+  @@unique([u_id,p_id])
   @@index([p_id], map: "fk_idx_p_pa")
   @@index([u_id], map: "fk_idx_u_pa")
 }
