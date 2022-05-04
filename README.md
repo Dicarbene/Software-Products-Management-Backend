@@ -9,46 +9,48 @@
 
 ### `GET`
 
-- `/user=:u_log_id`
+- `/user=:u_log_id`:用户信息页
+  - params
+    - `u_log_id`:分页
 
-   用户名为`u_log_id`的个人主页
+- `/user=:u_log_id/product=:p_name`:某用户创建的某仓库的信息页
 
-- `/user=:u_log_id/product=:p_name`
+  - params
+    - `u_log_id`:创建者用户名
+    - `p_name`:仓库名
 
-    用户名为`u_log_id`创建的产品名为`p_name`的产品的主要信息
+- `/user=:u_log_id/product=:p_name/code=:f_name`:某用户创建的某仓库中某文件的迭代版本信息
 
-- `/user=:u_log_id/product=:p_name/code=:f_name`
+  - params
+    - `u_log_id`:创建者用户名
+    - `p_name`:仓库名
+    - `f_name`:文件名
 
-    用户名为`u_log_id`创建的产品名为`p_name`的产品中文件名为`f_name`的代码的迭代版本
-
-- `/users/p=:page`
-
-  查看全部的用户
-
-    - 分页 `page`
-      
-      结果的第几页
-
-- `/products/p=:page`
-
-  查看全部产品
-
-    - 分页 `page`
-      
-      结果的第几页
+- `/teamManagement/leader=:u_id`:leader创建的的全部项目
+  - params
+    - `u_id`:领队(即创建者)用户名
 
 - `/searchProduct/type=:type_of_search&q=:p_name&p=:page`
-  - 搜索类型 `type_of_search`
-    - `product`:搜索产品名 
-    - `user`:搜索用户名 
+  - params
+    - `type_of_search`:搜索模式
+      - `product`:搜索仓库
+      - `user`: 搜索用户
+    - `query`:搜索内容
+    - `page`:分页
 
-  - 搜索类型 `p_name`
-    - `product`:搜索产品名 
-    - `user`:搜索用户名 
+- `/user=:u_log_id/product=:p_name/coworkers`
 
-  - 分页 `page`
+  - params
+    - `u_log_id`:用户名
+    - `p_name`: 仓库名
 
-    搜索结果的第几页
+- `/users/p=:page`: 所有用户的简略信息
+  - params
+    - `page`:分页
+
+- `/users/p=:page`: 所有仓库的简略信息
+  - params
+    - `page`:分页
 
 ### `POST`
 
@@ -61,13 +63,35 @@
   - Body:
     - `id_or_email: String` (required): 用户的登录id或邮箱，两者任选其一输入
     - `password: String` (required): 用户的密码
+- `/userInfoUpdate/user=:log_id`: 更新用户信息
+  - params:
+    - `log_id`: 用户名
+  - body:
+    - `watcher_id: String`: 浏览者用户名
+    - `password: String`: 修改密码
+    - `email: String`: 修改邮箱
+    - `pic_url: Sting`: 头像地址
 
-- `/newProduct`: 新建项目
+- `/newProduct/creator=:u_id`: 新建项目
+  - params:
+    - `u_id`: 创建者用户名
   - Body:
+    - `watcher_id: String` (required): 浏览者用户名
     - `p_name: String` (required): 项目名称
-    - `u_id: String` (required): 创建者用户名
+    - `introduction: String`: 项目简介
+
+- `/teamManagement/leader=:u_id`:设置队友
+  - params:
+    - `u_id`: 创建者用户名
+  - Body:
+    - `watcher_id: String` (required): 浏览者用户名
+    - `teammate_id: String` (required): 队友用户名
+    - `p_name: String[]`: 项目名数组
 
 - `/user=:u_log_id/product=:p_name`: 关注/取消关注/收藏/取消收藏
+  - params
+    - `u_log_id`:用户名
+    - `p_name`:仓库名
   - Body:
     - `watcher_id: String` (required): 使用此功能的用户的用户名
     - `move_type: String` (required): 动作类型
@@ -75,3 +99,16 @@
       - `move_type==2` un_watch
       - `move_type==3` star
       - `move_type==4` un_star
+      - `move_type==5` new file
+    - `coworkers: String[]` (required): 协作者用户名数组
+    - `f_name: String` (Optional): 新建文件名
+
+- `/user=:u_log_id/product=:p_name/code=:f_name`: 文件上传
+  - params
+    - `u_log_id`: 用户名
+    - `p_name`: 仓库名
+    - `f_name`: 文件名
+  - body
+    - `watcher_id: String`(required): 浏览者用户名
+    - `coworkers: String[]`(required):协作者用户名数组 
+    - `file: String`(required):文件内容(长字符串)

@@ -3,8 +3,12 @@ const { PrismaClient } = require('@prisma/client')
 const { json } = require('express/lib/response')
 const res = require('express/lib/response')
 
+const cors = require('cors')//cors解决跨域
+
 const prisma = new PrismaClient()
 const app = express()
+
+app.use(cors())//cors解决跨域
 
 app.use(express.json())
 
@@ -130,7 +134,7 @@ app.use(express.json())
       const u_info = await prisma.user_info.findUnique({
         where: { user_log_id: log_id },
       })
-      if(u_info==null)res.status(404)
+      if(!u_info)res.status(404)
 
       if(watcher_id!=log_id)res.status(404).send('you are not allowed!')
 
@@ -188,7 +192,7 @@ app.use(express.json())
       const u_info = await prisma.user_info.findUnique({
         where: { user_log_id: u_id },
       })
-      if(u_info==null)res.status(404)
+      if(!u_info)res.status(404)
 
       if(watcher_id!=u_id)res.status(404).send('you are not allowed!')
 
@@ -243,14 +247,14 @@ app.use(express.json())
       const u_info = await prisma.user_info.findUnique({
         where: { user_log_id: u_id },
       })
-      if(u_info==null)res.status(404)//若查无此人，404
+      if(!u_info)res.status(404)//若查无此人，404
 
       if(watcher_id!=u_id)res.status(404).send('you are not allowed!')//浏览者不是leader，无资格
 
       const id_result = await prisma.user_info.findUnique({
         where: {user_log_id: teammate_id, },
       })
-      if(id_result==null)res.send('查无此人！')
+      if(!id_result)res.send('查无此人！')
 
       let i=new Number
       let name_arr
@@ -342,7 +346,7 @@ app.use(express.json())
       },
     })
 
-    if(u_info==null)res.status(404)
+    if(!u_info)res.status(404)
 
       const p_of_this_u = await prisma.$queryRaw`call pr_all_p_of_one_u(${u_log_id})`
 
@@ -406,7 +410,7 @@ app.use(express.json())
           where: { user_log_id: u_log_id },
         })
     
-        if(u_info==null)res.status(404)
+        if(!u_info)res.status(404)
 
         const p_info = await prisma.product_info.findUnique({
           where: { 
@@ -417,7 +421,7 @@ app.use(express.json())
           },
         })
     
-        if(p_info==null)res.status(404)
+        if(!p_info)res.status(404)
 
       let w_t,w_7,s_t,s_7
 
@@ -466,7 +470,7 @@ app.use(express.json())
           where: { user_log_id: u_log_id },
         })
     
-        if(u_info==null)res.status(404)
+        if(!u_info)res.status(404)
 
         const p_info = await prisma.product_info.findUnique({
           where: { 
@@ -477,7 +481,7 @@ app.use(express.json())
           },
         })
     
-        if(p_info==null)res.status(404)
+        if(!p_info)res.status(404)
         
       //move_type:
       //1:watch
@@ -549,7 +553,7 @@ app.use(express.json())
           where: { user_log_id: u_log_id },
         })
     
-        if(u_info==null)res.status(404)
+        if(!u_info)res.status(404)
 
         const p_info = await prisma.product_info.findUnique({
           where: { 
@@ -560,7 +564,7 @@ app.use(express.json())
           },
         })
     
-        if(p_info==null)res.status(404)
+        if(!p_info)res.status(404)
 
         const coworkers_info = await prisma.participation_info.findMany({
           where: { p_id: p_info.id },
@@ -611,7 +615,7 @@ app.use(express.json())
         where: { user_log_id: u_log_id },
       })
   
-      if(u_info==null)res.status(404)
+      if(!u_info)res.status(404)
 
       const p_info = await prisma.product_info.findUnique({
         where: { 
@@ -622,7 +626,7 @@ app.use(express.json())
         },
       })
   
-      if(p_info==null)res.status(404)
+      if(!p_info)res.status(404)
 
       const f_info = await prisma.file_info.findUnique({
         where: { 
@@ -634,7 +638,7 @@ app.use(express.json())
       })
       //res.json(f_info)
   
-      if(f_info==null)res.status(404)
+      if(!f_info)res.status(404)
 
     let w_t,w_7,s_t,s_7
 
@@ -683,7 +687,7 @@ app.use(express.json())
         where: { user_log_id: watcher_id },
       })
   
-      if(u_info==null)res.status(404)
+      if(!u_info)res.status(404)
 
       const p_info = await prisma.product_info.findUnique({
         where: { 
@@ -694,7 +698,7 @@ app.use(express.json())
         },
       })
   
-      if(p_info==null)res.status(404)
+      if(!p_info)res.status(404)
 
       const f_info = await prisma.file_info.findUnique({
         where: { 
@@ -706,7 +710,7 @@ app.use(express.json())
       })
       //res.json(f_info)
   
-      if(f_info==null)res.status(404)
+      if(!f_info)res.status(404)
 
       function checkIfIn(coworkers) {//findIndex方法的判断函数
         return coworkers == watcher_id;
@@ -890,7 +894,7 @@ app.get('/users/p=:page', async (req, res) => {
 
   let i,l,width=new Number;
 
-  width=2;//设置一页有多少条搜索结果
+  width=12;//设置一页有多少条搜索结果
 
   let all_result=new Array;
   let n=new Number;
@@ -916,7 +920,8 @@ app.get('/users/p=:page', async (req, res) => {
     let arr1= JSON.parse(JSON.stringify(limited_result).replace(/f0/g,"id"))
     let arr2= JSON.parse(JSON.stringify(arr1).replace(/f1/g,"userLogId"))
     let arr3= JSON.parse(JSON.stringify(arr2).replace(/f2/g,"starsCount"))
-    let limited_result_adjusted= JSON.parse(JSON.stringify(arr3).replace(/f3/g,"productsCount"))
+    let arr4= JSON.parse(JSON.stringify(arr3).replace(/f3/g,"productsCount"))
+    let limited_result_adjusted= JSON.parse(JSON.stringify(arr4).replace(/f4/g,"profilePicUrl"))
     //更改属性名
 
     let t = n + "";
@@ -971,7 +976,7 @@ app.get('/products/p=:page', async (req, res) => {
 
   let i,l,width=new Number;
 
-  width=2;//设置一页有多少条搜索结果
+  width=16;//设置一页有多少条搜索结果
 
   let all_result=new Array;
   let n=new Number;
