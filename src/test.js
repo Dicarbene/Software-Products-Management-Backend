@@ -6,7 +6,9 @@ const {
   json,
   send
 } = require('express/lib/response')
-const res = require('express/lib/response')
+//const res = require('express/lib/response')
+
+const bodyParser = require('body-parser');
 
 const compression = require('compression');
 //使用gzip压缩，减小web应用响应体大小
@@ -22,6 +24,9 @@ app.use(cors()) //cors解决跨域
 app.use(compression());
 
 app.use(express.json())
+
+//app.use(bodyParser.json());
+//app.use(bodyParser.urlencoded({ extended: false }));
 
 app.post(`/register`, async (req, res) => {
   const {
@@ -70,6 +75,8 @@ app.post(`/register`, async (req, res) => {
       let e_email = 0 //是否存在email，0为不存在
       let _if = 0; //是否创建成功，1为成功
 
+      //console.log(req.body)
+
       const result = await prisma.$queryRaw `call pr_log_in(${id},${password},${email},${e_id},${e_email},${_if})`
 
       let arr1 = JSON.parse(JSON.stringify(result[0]).replace(/f0/g, "ifExistsId"))
@@ -104,7 +111,7 @@ app.post(`/login`, async (req, res) => {
   }
   */
 
-  //try{
+  try{
   let _if = 0; //是否登录成功，1为成功
 
   const result = await prisma.$queryRaw `call pr_log_on(${id_or_email},${password},${_if})`
@@ -113,9 +120,9 @@ app.post(`/login`, async (req, res) => {
 
   //console.log(result);
   res.json(result_adjusted)
-  //}catch(error){
-  //res.send('something wrong')
-  //}
+  }catch(error){
+    res.send('something wrong')
+  }
 })
 
 app.post(`/userInfoUpdate/user=:log_id`, async (req, res) => { //更改个人信息，用户名不可更改
@@ -876,7 +883,7 @@ app.post(`/user=:u_log_id/product=:p_name/code=:f_name`, async (req, res) => { /
   }
 })
 
-app.get(`/searchProduct/type=:type_of_search&q=:query&p=:page`, async (req, res) => { //基于全文索引的简单搜索
+app.get(`/search/type=:type_of_search&q=:query&p=:page`, async (req, res) => { //基于全文索引的简单搜索
   const {
     query,
     type_of_search,
@@ -940,13 +947,13 @@ app.get(`/searchProduct/type=:type_of_search&q=:query&p=:page`, async (req, res)
 
     let adjusted_page = parseInt(page)
 
-    if (adjusted_page <= 0) adjusted_page = 1; //处理所有负数据和0，定为第一页
-
-    let n_ //必须的传值手段，定义而不用
+    if (adjusted_page <= 0) 
+      res.status(404).send('wrong page number:to small'); //处理所有负数据和0，不许如此访问
+    else{
 
     let i, l, width = new Number;
 
-    width = 2; //设置一页有多少条搜索结果
+    width = 5; //设置一页有多少条搜索结果
 
     let all_result = new Array;
     let n = new Number;
@@ -962,7 +969,7 @@ app.get(`/searchProduct/type=:type_of_search&q=:query&p=:page`, async (req, res)
       n = all_result.length
       //n = await prisma.$queryRaw`call pr_how_many_results_u(${p_name},${n_})`
       //所有的存储过程调用语句都返回一个数组
-    } else res.status(404);
+    }
 
     l = 0;
     i = 0;
@@ -1003,7 +1010,11 @@ app.get(`/searchProduct/type=:type_of_search&q=:query&p=:page`, async (req, res)
 
     const x = [total, outOfRange, limited_result_adjusted] //应当判断limited_result[0]是否为空，空则显示没有更多信息
 
-    res.json(x)
+    if(type_of_search!='product'&&type_of_search!='user')
+      res.status(404).send('no such type');
+    else
+      res.json(x)
+    }
   } catch (error) {
     res.send('something wrong')
   }
@@ -1043,49 +1054,49 @@ app.get('/users/p=:page', async (req, res) => {
   try {
     let adjusted_page = parseInt(page)
 
-    if (adjusted_page <= 0) adjusted_page = 1; //处理所有负数据和0，定为第一页
+    if (adjusted_page <= 0)res.status(404).send('wrong page number:to small') //处理所有负数据和0，不许如此访问
+    else{
 
-    let n_ //必须的传值手段，定义而不用
+      let i, l, width = new Number;
 
-    let i, l, width = new Number;
-
-    width = 12; //设置一页有多少条搜索结果
-
-    let all_result = new Array;
-    let n = new Number;
-    let limited_result = new Array;
-
-    all_result = await prisma.$queryRaw `call pr_all_users()`
-    n = all_result.length
-
-    l = 0;
-    i = 0;
-
-    for (i = (adjusted_page - 1) * width; i <= adjusted_page * width - 1; i++) {
-      limited_result[l] = all_result[i];
-      l++;
+      width = 12; //设置一页有多少条搜索结果
+  
+      let all_result = new Array;
+      let n = new Number;
+      let limited_result = new Array;
+  
+      all_result = await prisma.$queryRaw `call pr_all_users()`
+      n = all_result.length
+  
+      l = 0;
+      i = 0;
+  
+      for (i = (adjusted_page - 1) * width; i <= adjusted_page * width - 1; i++) {
+        limited_result[l] = all_result[i];
+        l++;
+      }
+      let if_out = 0
+      if (limited_result[0] == null) { //判断是否没有找到更多内容
+        if_out = 1
+      }
+      let x_if_out = if_out + "";
+      let str_if_out = '{"outOfRange":' + x_if_out + '}';
+      let outOfRange = JSON.parse(str_if_out); //数字转化JSON格式
+  
+      let arr1 = JSON.parse(JSON.stringify(limited_result).replace(/f0/g, "id"))
+      let arr2 = JSON.parse(JSON.stringify(arr1).replace(/f1/g, "userLogId"))
+      let arr3 = JSON.parse(JSON.stringify(arr2).replace(/f2/g, "starsCount"))
+      let arr4 = JSON.parse(JSON.stringify(arr3).replace(/f3/g, "productsCount"))
+      let limited_result_adjusted = JSON.parse(JSON.stringify(arr4).replace(/f4/g, "profilePicUrl"))
+      //更改属性名
+  
+      let t = n + "";
+      let str = '{"totalNum":' + t + '}';
+      let total = JSON.parse(str); //数字转化JSON格式
+  
+      const x = [total, outOfRange, limited_result_adjusted] //应当判断limited_result[0]是否为空，空则显示没有更多信息
+      res.json(x)
     }
-    let if_out = 0
-    if (limited_result[0] == null) { //判断是否没有找到更多内容
-      if_out = 1
-    }
-    let x_if_out = if_out + "";
-    let str_if_out = '{"outOfRange":' + x_if_out + '}';
-    let outOfRange = JSON.parse(str_if_out); //数字转化JSON格式
-
-    let arr1 = JSON.parse(JSON.stringify(limited_result).replace(/f0/g, "id"))
-    let arr2 = JSON.parse(JSON.stringify(arr1).replace(/f1/g, "userLogId"))
-    let arr3 = JSON.parse(JSON.stringify(arr2).replace(/f2/g, "starsCount"))
-    let arr4 = JSON.parse(JSON.stringify(arr3).replace(/f3/g, "productsCount"))
-    let limited_result_adjusted = JSON.parse(JSON.stringify(arr4).replace(/f4/g, "profilePicUrl"))
-    //更改属性名
-
-    let t = n + "";
-    let str = '{"totalNum":' + t + '}';
-    let total = JSON.parse(str); //数字转化JSON格式
-
-    const x = [total, outOfRange, limited_result_adjusted] //应当判断limited_result[0]是否为空，空则显示没有更多信息
-    res.json(x)
   } catch (error) {
     res.send('something wrong')
   }
@@ -1128,51 +1139,51 @@ app.get('/products/p=:page', async (req, res) => {
   try {
     let adjusted_page = parseInt(page)
 
-    if (adjusted_page <= 0) adjusted_page = 1; //处理所有负数据和0，定为第一页
+    if (adjusted_page <= 0)res.status(404).send('wrong page number:to small') //处理所有负数据和0，不许如此访问
+    else{
+      
+      let i, l, width = new Number;
 
-    let n_ //必须的传值手段，定义而不用
-
-    let i, l, width = new Number;
-
-    width = 16; //设置一页有多少条搜索结果
-
-    let all_result = new Array;
-    let n = new Number;
-    let limited_result = new Array;
-
-    all_result = await prisma.$queryRaw `call pr_all_products()`
-    n = all_result.length
-
-    l = 0;
-    i = 0;
-
-    for (i = (adjusted_page - 1) * width; i <= adjusted_page * width - 1; i++) {
-      limited_result[l] = all_result[i];
-      l++;
+      width = 16; //设置一页有多少条搜索结果
+  
+      let all_result = new Array;
+      let n = new Number;
+      let limited_result = new Array;
+  
+      all_result = await prisma.$queryRaw `call pr_all_products()`
+      n = all_result.length
+  
+      l = 0;
+      i = 0;
+  
+      for (i = (adjusted_page - 1) * width; i <= adjusted_page * width - 1; i++) {
+        limited_result[l] = all_result[i];
+        l++;
+      }
+  
+      let if_out = 0
+      if (limited_result[0] == null) { //判断是否没有找到更多内容
+        if_out = 1
+      }
+      let x_if_out = if_out + "";
+      let str_if_out = '{"outOfRange":' + x_if_out + '}';
+      let outOfRange = JSON.parse(str_if_out); //数字转化JSON格式
+  
+      let arr1 = JSON.parse(JSON.stringify(limited_result).replace(/f0/g, "id"))
+      let arr2 = JSON.parse(JSON.stringify(arr1).replace(/f1/g, "productName"))
+      let arr3 = JSON.parse(JSON.stringify(arr2).replace(/f2/g, "creator"))
+      let arr4 = JSON.parse(JSON.stringify(arr3).replace(/f3/g, "introduction"))
+      let arr5 = JSON.parse(JSON.stringify(arr4).replace(/f4/g, "totalWatch"))
+      let limited_result_adjusted = JSON.parse(JSON.stringify(arr5).replace(/f5/g, "totalStar"))
+      //更改属性名
+  
+      let t = n + "";
+      let str = '{"totalNum":' + t + '}';
+      let total = JSON.parse(str); //数字转化JSON格式
+  
+      const x = [total, outOfRange, limited_result_adjusted] //应当判断limited_result[0]是否为空，空则显示没有更多信息
+      res.json(x)
     }
-
-    let if_out = 0
-    if (limited_result[0] == null) { //判断是否没有找到更多内容
-      if_out = 1
-    }
-    let x_if_out = if_out + "";
-    let str_if_out = '{"outOfRange":' + x_if_out + '}';
-    let outOfRange = JSON.parse(str_if_out); //数字转化JSON格式
-
-    let arr1 = JSON.parse(JSON.stringify(limited_result).replace(/f0/g, "id"))
-    let arr2 = JSON.parse(JSON.stringify(arr1).replace(/f1/g, "productName"))
-    let arr3 = JSON.parse(JSON.stringify(arr2).replace(/f2/g, "creator"))
-    let arr4 = JSON.parse(JSON.stringify(arr3).replace(/f3/g, "introduction"))
-    let arr5 = JSON.parse(JSON.stringify(arr4).replace(/f4/g, "totalWatch"))
-    let limited_result_adjusted = JSON.parse(JSON.stringify(arr5).replace(/f5/g, "totalStar"))
-    //更改属性名
-
-    let t = n + "";
-    let str = '{"totalNum":' + t + '}';
-    let total = JSON.parse(str); //数字转化JSON格式
-
-    const x = [total, outOfRange, limited_result_adjusted] //应当判断limited_result[0]是否为空，空则显示没有更多信息
-    res.json(x)
   } catch (error) {
     res.send('something wrong')
   }
