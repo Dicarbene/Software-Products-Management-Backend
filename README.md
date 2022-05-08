@@ -48,7 +48,7 @@
   - params
     - `page`:分页
 
-- `/users/p=:page`: 所有仓库的简略信息
+- `/products/p=:page`: 所有仓库的简略信息
   - params
     - `page`:分页
 
