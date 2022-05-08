@@ -229,22 +229,36 @@ app.post(`/newProduct/creator=:u_id`, async (req, res) => {
   */
 
   try {
-    const u_info = await prisma.user_info.findUnique({
-      where: {
-        user_log_id: u_id
-      },
-    })
-    if (!u_info) res.status(404)
+    let sPname = /^[a-zA-Z0-9_-]{4,16}$/
+    let pnameValid = true
+    if (!sPname.test(p_name)) pnameValid = false
 
-    if (watcher_id != u_id) res.status(404).send('you are not allowed!')
+    if(pnameValid==true){
+      const u_info = await prisma.user_info.findUnique({
+        where: {
+          user_log_id: u_id
+        },
+      })
+      if (!u_info) res.status(404)
+  
+      if (watcher_id != u_id) res.status(404).send('you are not allowed!')
+  
+      let _if = 0; //是否存在同名，0为不存在，即成功创建
+  
+      const result = await prisma.$queryRaw `call pr_new_product(${p_name},${introduction},${u_id},${_if})`
+      let result_adjusted = JSON.parse(JSON.stringify(result[0]).replace(/f0/g, "ifCreateOk"))
+  
+      //console.log(result);
+      res.json(result_adjusted)
+    }
+    else{
+      let t = pnameValid + "";
+      let str = '{"productNameValid":' + t + '}';
+      let valid = JSON.parse(str); //数字转化JSON格式
+      res.json(valid)
+    }
 
-    let _if = 0; //是否存在同名，0为不存在，即成功创建
-
-    const result = await prisma.$queryRaw `call pr_new_product(${p_name},${introduction},${u_id},${_if})`
-    let result_adjusted = JSON.parse(JSON.stringify(result[0]).replace(/f0/g, "ifCreateOk"))
-
-    //console.log(result);
-    res.json(result_adjusted)
+    
   } catch (error) {
     res.send('something wrong')
   }
@@ -757,6 +771,7 @@ app.get(`/user=:u_log_id/product=:p_name/code=:f_name`, async (req, res) => { //
       "f_name": test_file
     }
     */
+
     const u_info = await prisma.user_info.findUnique({
       where: {
         user_log_id: u_log_id
@@ -788,6 +803,8 @@ app.get(`/user=:u_log_id/product=:p_name/code=:f_name`, async (req, res) => { //
 
     if (!f_info) res.status(404)
 
+    /*
+
     let w_t, w_7, s_t, s_7
 
     const result_watch = await prisma.$queryRaw `call pr_watch_info(${p_info.id},${w_t},${w_7})`
@@ -801,14 +818,21 @@ app.get(`/user=:u_log_id/product=:p_name/code=:f_name`, async (req, res) => { //
     let result_star_adjusted = JSON.parse(JSON.stringify(single2).replace(/f1/g, "7daysRecentStar"))
     //改变json属性名称，同时把json数组取消掉（prisma转化原生sql语句为json数组，此处的数组只有第0项）
 
+    */
+
     const all_edition = await prisma.$queryRaw `call pr_view_all_edition(${f_info.id})`
 
     let arr1 = JSON.parse(JSON.stringify(all_edition).replace(/f0/g, "id"))
     let arr2 = JSON.parse(JSON.stringify(arr1).replace(/f1/g, "changedTime"))
     let all_edition_adjusted = JSON.parse(JSON.stringify(arr2).replace(/f2/g, "url"))
 
-    const x = [p_info, result_watch_adjusted, result_star_adjusted, all_edition_adjusted] //product_info已有冗余列，不需要返回u_info
-    res.json(x)
+    //all_edition_adjusted = JSON.parse(JSON.stringify(all_edition_adjusted).replace('@\\r @', '\r'))
+    //all_edition_adjusted = JSON.parse(JSON.stringify(all_edition_adjusted).replace('@\\n @', '\n'))
+
+    //const x = [p_info, result_watch_adjusted, result_star_adjusted, all_edition_adjusted] //product_info已有冗余列，不需要返回u_info
+
+    res.json(all_edition_adjusted)
+
   } catch (error) {
     res.status(404).send('something wrong')
   }
@@ -875,10 +899,25 @@ app.post(`/user=:u_log_id/product=:p_name/code=:f_name`, async (req, res) => { /
     }
     if (coworkers.findIndex(checkIfIn) == -1) res.send('you have no right to update file') //应当修改
     else {
-      await prisma.$queryRaw `call pr_new_content(${f_info.id},${file})`
-      res.send('update successfully') //应当修改
+
+      let file_adj=file
+
+      file_adj = file_adj.replace(/\\r/g, '@\r@')
+      file_adj = file_adj.replace(/\\n/g, '@\n@')
+
+      file_adj = file_adj.replace(/\r/g, '\\r ')
+      file_adj = file_adj.replace(/\n/g, '\\n ')
+
+      file_adj = file_adj.replace(/@\\r @/g, '\r')
+      file_adj = file_adj.replace(/@\\n @/g, '\n')
+
+      const new_content = await prisma.$queryRaw `insert into file_content(file_info_id,file_url)values(${f_info.id},${file_adj})`
+      const update_file_info = await prisma.$queryRaw `update file_info set latest_change_time=CURRENT_TIMESTAMP()where _id=${f_info.id};`
+
+      res.send('upload successfully') //应当修改
     }
   } catch (error) {
+    console.log(error)
     res.status(404).send('something wrong')
   }
 })
@@ -961,12 +1000,12 @@ app.get(`/search/type=:type_of_search&q=:query&p=:page`, async (req, res) => { /
 
     if (type_of_search == 'product') {
       all_result = await prisma.$queryRaw `call pr_search_p(${query})`
-      n = all_result.length
+      n = Math.ceil(all_result.length/width)
       //n = await prisma.$queryRaw`call pr_how_many_results_p(${p_name},${n_})`
       //所有的存储过程调用语句都返回一个数组
     } else if (type_of_search == 'user') {
       all_result = await prisma.$queryRaw `call pr_search_u(${query})`
-      n = all_result.length
+      n = Math.ceil(all_result.length/width)
       //n = await prisma.$queryRaw`call pr_how_many_results_u(${p_name},${n_})`
       //所有的存储过程调用语句都返回一个数组
     }
@@ -1185,6 +1224,7 @@ app.get('/products/p=:page', async (req, res) => {
       res.json(x)
     }
   } catch (error) {
+    console.log(error)
     res.send('something wrong')
   }
 })
