@@ -1,5 +1,8 @@
 generator client {
   provider = "prisma-client-js"
+  //
+  binaryTargets = ["native"]
+  //在服务器上应有此行
 }
 
 datasource db {
@@ -11,7 +14,6 @@ model file_content {
   id           Int            @id @default(autoincrement()) @map("_id")
   file_info_id Int
   file_url     String         @db.LongText
-  file_name    String         @db.VarChar(45)
   update_time  DateTime       @default(now()) @db.Timestamp(0)
   file_info    file_info      @relation(fields: [file_info_id], references: [id], onDelete: Cascade, map: "fk_to_show_content")
   file_edition file_edition[]
